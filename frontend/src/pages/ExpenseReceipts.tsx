@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { api, WORKER_API_BASE } from '../lib/api';
 import { Trash2, Download, Search, Pencil } from 'lucide-react';
 
@@ -26,6 +27,7 @@ async function downloadReceiptPDF(receiptId: string, receiptNumber: string) {
 }
 
 export default function ExpenseReceipts() {
+  const { i18n } = useTranslation();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');

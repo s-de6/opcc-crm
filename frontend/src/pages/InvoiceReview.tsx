@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { api, WORKER_API_BASE } from '../lib/api';
 import { Save, Trash2, Plus, X, ChevronLeft } from 'lucide-react';
 
@@ -22,6 +23,7 @@ function MoneyInput({ value, onChange }: { value: number; onChange: (v: number) 
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function InvoiceReview() {
+  const { i18n } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -155,7 +157,7 @@ export default function InvoiceReview() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center space-y-3">
           <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto" />
-          <p className="text-sm text-muted-foreground">Loading invoice data…</p>
+          <p className="text-sm text-muted-foreground">{i18n.language === 'en' ? 'Loading invoice data…' : '載入發票資料中…'}</p>
         </div>
       </div>
     );
@@ -164,7 +166,9 @@ export default function InvoiceReview() {
   // Detect if this is a receipt (has receipt_number set, or invoice_number starts with REC-)
   const isReceipt = !!(invoiceData?.receipt_number || invoiceData?.invoice_number?.startsWith('REC-'));
   const isIncomingInvoice = !isReceipt && invoiceData?.direction === 'incoming';
-  const docLabel = isReceipt ? 'Receipt 收據' : 'Invoice 發票';
+  const docLabel = isReceipt
+    ? (i18n.language === 'en' ? 'Receipt' : 'Receipt 收據')
+    : (i18n.language === 'en' ? 'Invoice' : 'Invoice 發票');
   const customers: any[] = invoiceData?.customers || [];
 
   return (
@@ -176,9 +180,11 @@ export default function InvoiceReview() {
             <ChevronLeft className="h-4 w-4" />
           </button>
           <div>
-            <h2 className="font-semibold text-sm">Review {docLabel}</h2>
+            <h2 className="font-semibold text-sm">{i18n.language === 'en' ? `Review ${docLabel}` : `審核 ${docLabel}`}</h2>
             <p className="text-xs text-muted-foreground">
-              Check the extracted data against the original PDF, edit if needed, then Save.
+              {i18n.language === 'en'
+                ? 'Check the extracted data against the original PDF, edit if needed, then Save.'
+                : '對照原始 PDF 核查提取的數據，如需要可編輯，然後儲存。'}
             </p>
           </div>
         </div>
@@ -189,7 +195,7 @@ export default function InvoiceReview() {
         {/* Left: original PDF */}
         <div className="w-[50%] border-r flex flex-col bg-gray-100">
           <div className="px-3 py-1.5 text-xs text-muted-foreground bg-card border-b flex-shrink-0">
-            原始文件 Original Document
+            {i18n.language === 'en' ? 'Original Document' : '原始文件 Original Document'}
             {invoiceData?.file_original_name && (
               <span className="ml-2 font-medium text-foreground">{invoiceData.file_original_name}</span>
             )}
@@ -217,15 +223,21 @@ export default function InvoiceReview() {
 
             {/* ── Header fields ── */}
             <div className="bg-card border rounded-xl p-4 space-y-3">
-              <h3 className="font-semibold text-sm border-b pb-2">{docLabel} Details {isReceipt ? '收據資料' : '發票資料'}</h3>
+              <h3 className="font-semibold text-sm border-b pb-2">
+                {i18n.language === 'en' ? `${docLabel} Details` : `${docLabel} ${isReceipt ? '收據資料' : '發票資料'}`}
+              </h3>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-0.5">{isReceipt ? 'Receipt Number 收據號碼' : 'Invoice Number 發票號碼'}</label>
+                  <label className="text-xs text-muted-foreground block mb-0.5">
+                    {isReceipt
+                      ? (i18n.language === 'en' ? 'Receipt Number' : 'Receipt Number 收據號碼')
+                      : (i18n.language === 'en' ? 'Invoice Number' : 'Invoice Number 發票號碼')}
+                  </label>
                   <input value={form.invoice_number} onChange={(e) => setForm({ ...form, invoice_number: e.target.value })}
                     className="w-full px-2 py-1.5 border rounded text-sm bg-background font-mono" placeholder="e.g. INV-2025-001" />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-0.5">Currency 貨幣</label>
+                  <label className="text-xs text-muted-foreground block mb-0.5">{i18n.language === 'en' ? 'Currency' : 'Currency 貨幣'}</label>
                   <select value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })}
                     className="w-full px-2 py-1.5 border rounded text-sm bg-background">
                     <option value="HKD">HKD</option>
@@ -236,12 +248,12 @@ export default function InvoiceReview() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-0.5">Issue Date 開票日期</label>
+                  <label className="text-xs text-muted-foreground block mb-0.5">{i18n.language === 'en' ? 'Issue Date' : 'Issue Date 開票日期'}</label>
                   <input type="date" value={form.issue_date} onChange={(e) => setForm({ ...form, issue_date: e.target.value })}
                     className="w-full px-2 py-1.5 border rounded text-sm bg-background" />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-0.5">Due Date 到期日</label>
+                  <label className="text-xs text-muted-foreground block mb-0.5">{i18n.language === 'en' ? 'Due Date' : 'Due Date 到期日'}</label>
                   <input type="date" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })}
                     className="w-full px-2 py-1.5 border rounded text-sm bg-background" />
                 </div>
@@ -251,12 +263,14 @@ export default function InvoiceReview() {
             {/* ── Customer / Vendor ── */}
             <div className="bg-card border rounded-xl p-4 space-y-3">
               <h3 className="font-semibold text-sm border-b pb-2">
-                {isIncomingInvoice ? '供應商 Supplier — who billed us' : '客戶 Customer — who we billed'}
+                {isIncomingInvoice
+                  ? (i18n.language === 'en' ? 'Supplier — who billed us' : '供應商 Supplier — who billed us')
+                  : (i18n.language === 'en' ? 'Customer — who we billed' : '客戶 Customer — who we billed')}
               </h3>
               {isIncomingInvoice && (
                 <div>
                   <label className="text-xs text-muted-foreground block mb-0.5">
-                    Supplier Name 供應商名稱
+                    {i18n.language === 'en' ? 'Supplier Name' : 'Supplier Name 供應商名稱'}
                   </label>
                   <input value={form.vendor_name} onChange={(e) => setForm({ ...form, vendor_name: e.target.value })}
                     className="w-full px-2 py-1.5 border rounded text-sm bg-background" placeholder="e.g. Muse Labs Engineering Limited" />
@@ -264,17 +278,22 @@ export default function InvoiceReview() {
               )}
               <div>
                 <label className="text-xs text-muted-foreground block mb-0.5">
-                  {isIncomingInvoice ? "Link to Supplier Record 關聯供應商" : "Link to Customer Record 關聯客戶"} <span className="text-muted-foreground">(optional)</span>
+                  {isIncomingInvoice
+                    ? (i18n.language === 'en' ? 'Link to Supplier Record' : 'Link to Supplier Record 關聯供應商')
+                    : (i18n.language === 'en' ? 'Link to Customer Record' : 'Link to Customer Record 關聯客戶')}
+                  {' '}<span className="text-muted-foreground">({i18n.language === 'en' ? 'optional' : '可選'})</span>
                 </label>
                 <select value={form.customer_id} onChange={(e) => setForm({ ...form, customer_id: e.target.value })}
                   className="w-full px-2 py-1.5 border rounded text-sm bg-background">
-                  <option value="">— Select customer —</option>
+                  <option value="">{i18n.language === 'en' ? '— Select customer —' : '— 選擇客戶 —'}</option>
                   {customers.map((c: any) => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
                 </select>
                 <p className="text-[10px] text-muted-foreground mt-0.5">
-                  If the vendor is a new contact, leave blank — they'll be created automatically.
+                  {i18n.language === 'en'
+                    ? "If the vendor is a new contact, leave blank — they'll be created automatically."
+                    : '如果供應商是新聯絡人，請留空 — 系統將自動建立。'}
                 </p>
               </div>
             </div>
@@ -282,19 +301,19 @@ export default function InvoiceReview() {
             {/* ── Line Items ── */}
             <div className="bg-card border rounded-xl p-4 space-y-3">
               <div className="flex items-center justify-between border-b pb-2">
-                <h3 className="font-semibold text-sm">Line Items 明細</h3>
+                <h3 className="font-semibold text-sm">{i18n.language === 'en' ? 'Line Items' : 'Line Items 明細'}</h3>
                 <button onClick={addItem}
                   className="flex items-center gap-1 text-xs text-primary hover:underline">
-                  <Plus className="h-3 w-3" /> Add Row
+                  <Plus className="h-3 w-3" /> {i18n.language === 'en' ? 'Add Row' : '新增列'}
                 </button>
               </div>
 
               {/* Column headers */}
               <div className="grid grid-cols-12 gap-2 text-xs text-muted-foreground px-1">
-                <span className="col-span-5">Description 描述</span>
-                <span className="col-span-2 text-center">Qty 數量</span>
-                <span className="col-span-2 text-right">Unit Price 單價</span>
-                <span className="col-span-2 text-right">Amount 金額</span>
+                <span className="col-span-5">{i18n.language === 'en' ? 'Description' : 'Description 描述'}</span>
+                <span className="col-span-2 text-center">{i18n.language === 'en' ? 'Qty' : 'Qty 數量'}</span>
+                <span className="col-span-2 text-right">{i18n.language === 'en' ? 'Unit Price' : 'Unit Price 單價'}</span>
+                <span className="col-span-2 text-right">{i18n.language === 'en' ? 'Amount' : 'Amount 金額'}</span>
                 <span className="col-span-1" />
               </div>
 
@@ -329,19 +348,19 @@ export default function InvoiceReview() {
 
               {items.length === 0 && (
                 <div className="text-center py-4 text-sm text-muted-foreground border border-dashed rounded-lg">
-                  No line items — click "Add Row" to add one manually
+                  {i18n.language === 'en' ? 'No line items — click "Add Row" to add one manually' : '沒有明細項目 — 點擊「新增列」手動添加'}
                 </div>
               )}
 
               {/* Totals */}
               <div className="border-t pt-3 space-y-1.5 text-sm">
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Subtotal</span>
+                  <span>{i18n.language === 'en' ? 'Subtotal' : '小計'}</span>
                   <span className="font-mono">{form.currency} {subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div className="flex justify-between items-center text-muted-foreground">
                   <div className="flex items-center gap-2">
-                    <span>Tax Rate</span>
+                    <span>{i18n.language === 'en' ? 'Tax Rate' : '稅率'}</span>
                     <input type="number" min="0" max="100" step="0.5"
                       value={form.tax_rate}
                       onChange={(e) => setForm({ ...form, tax_rate: parseFloat(e.target.value) || 0 })}
@@ -352,12 +371,12 @@ export default function InvoiceReview() {
                 </div>
                 {form.discount_amount > 0 && (
                   <div className="flex justify-between text-muted-foreground">
-                    <span>Discount</span>
+                    <span>{i18n.language === 'en' ? 'Discount' : '折扣'}</span>
                     <span className="font-mono text-red-500">- {form.currency} {(form.discount_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-bold border-t pt-1.5">
-                  <span>Total 合計</span>
+                  <span>{i18n.language === 'en' ? 'Total' : 'Total 合計'}</span>
                   <span className="font-mono text-base">{form.currency} {total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                 </div>
               </div>
@@ -365,9 +384,9 @@ export default function InvoiceReview() {
 
             {/* ── Notes ── */}
             <div className="bg-card border rounded-xl p-4 space-y-2">
-              <h3 className="font-semibold text-sm">Notes 備註</h3>
+              <h3 className="font-semibold text-sm">{i18n.language === 'en' ? 'Notes' : 'Notes 備註'}</h3>
               <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                rows={3} placeholder="Payment terms, reference numbers, etc."
+                rows={3} placeholder={i18n.language === 'en' ? 'Payment terms, reference numbers, etc.' : '付款條款、參考編號等'}
                 className="w-full px-2 py-1.5 border rounded text-sm bg-background resize-none" />
             </div>
 
@@ -375,12 +394,16 @@ export default function InvoiceReview() {
             <div className="flex gap-3 pb-6">
               <button onClick={handleDiscard} disabled={discardMut.isPending}
                 className="flex-1 flex items-center justify-center gap-2 py-2.5 border rounded-md text-sm text-destructive hover:bg-destructive/10">
-                <Trash2 className="h-4 w-4" /> Discard 放棄
+                <Trash2 className="h-4 w-4" /> {i18n.language === 'en' ? 'Discard' : 'Discard 放棄'}
               </button>
               <button onClick={handleSave} disabled={confirmMut.isPending || saved}
                 className="flex-2 flex-1 flex items-center justify-center gap-2 py-2.5 bg-primary text-primary-foreground rounded-md text-sm hover:opacity-90 disabled:opacity-60">
                 <Save className="h-4 w-4" />
-                {saved ? '已儲存 ✓' : confirmMut.isPending ? 'Saving…' : `Save ${docLabel}`}
+                {saved
+                  ? (i18n.language === 'en' ? '✓ Saved' : '已儲存 ✓')
+                  : confirmMut.isPending
+                    ? (i18n.language === 'en' ? 'Saving…' : '儲存中…')
+                    : (i18n.language === 'en' ? `Save ${docLabel}` : `儲存${docLabel}`)}
               </button>
             </div>
 

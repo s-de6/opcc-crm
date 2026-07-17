@@ -24,7 +24,7 @@ const navGroups = [
     ],
   },
   {
-    label: '文件處理',
+    label: 'fileProcessing',
     items: [
       { to: '/bank-statements', icon: Landmark, key: 'bankStatements' },
       { to: '/invoices', icon: FileText, key: 'invoices' },
@@ -34,7 +34,7 @@ const navGroups = [
     ],
   },
   {
-    label: '會計',
+    label: 'accounting',
     items: [
       { to: '/bookkeeping', icon: Calculator, key: 'bookkeeping' },
       { to: '/fixed-assets', icon: Building2, key: 'fixedAssets' },
@@ -77,7 +77,7 @@ const navGroups = [
     ],
   },
   {
-    label: '會計師樓',
+    label: 'firmManagement',
     hidden: true,
     items: [
       { to: '/firm/manage', icon: Building2, key: 'firmManagement' },
@@ -268,7 +268,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <div key={gi}>
               {group.label && !collapsed && (
                 <div className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider px-3 pt-3 pb-1">
-                  {group.label}
+                  {group.label === 'fileProcessing' ? (i18n.language === 'en' ? 'FILE PROCESSING' : '文件處理') :
+                   group.label === 'accounting' ? (i18n.language === 'en' ? 'ACCOUNTING' : '會計') :
+                   group.label === 'firmManagement' ? (i18n.language === 'en' ? 'FIRM' : '會計師樓') :
+                   group.label}
                 </div>
               )}
               {visibleItems.map((item) => {
@@ -317,7 +320,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer hover:text-foreground">
             <input type="checkbox" checked={showAll} onChange={e => setShowAll(e.target.checked)}
               className="rounded border-muted-foreground/30" />
-            顯示全部功能
+            {i18n.language === 'en' ? 'Show all features' : '顯示全部功能'}
           </label>
           <div className="text-sm text-muted-foreground">{user?.email}</div>
           <button onClick={handleLogout}

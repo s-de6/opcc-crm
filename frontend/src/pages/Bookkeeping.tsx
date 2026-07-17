@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
 import { Plus, Calculator, Download, Save } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Bookkeeping() {
+  const { i18n } = useTranslation();
   const { user } = useAuth();
   const isStaff = user?.role === 'staff' || user?.role === 'viewer';
   const queryClient = useQueryClient();

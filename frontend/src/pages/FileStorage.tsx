@@ -175,7 +175,7 @@ function FolderTree({ node, depth, expanded, toggle, onFileAction, onSetDirectio
 }
 
 export default function FileStorage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const isStaff = user?.role === 'staff' || user?.role === 'viewer';
   const queryClient = useQueryClient();
@@ -365,7 +365,9 @@ export default function FileStorage() {
     mutationFn: () => api('/file-storage/auto-match-invoices', { method: 'POST' }),
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['file-storage'] });
-      alert(`配對完成：${data.matched?.length || 0} 筆成功，${data.unmatched || 0} 筆未配對`);
+      alert(i18n.language === 'en'
+        ? `Match complete: ${data.matched?.length || 0} matched, ${data.unmatched || 0} unmatched`
+        : `配對完成：${data.matched?.length || 0} 筆成功，${data.unmatched || 0} 筆未配對`);
     },
   });
 
@@ -375,10 +377,14 @@ export default function FileStorage() {
       queryClient.invalidateQueries({ queryKey: ['file-storage'] });
       queryClient.invalidateQueries({ queryKey: ['file-storage-folders'] });
       queryClient.invalidateQueries({ queryKey: ['bank-statements'] });
-      alert(`已匯入銀行月結單！\n交易筆數：${data.transactions_count || 0}\n銀行：${data.bank_name || '未知'}`);
+      alert(i18n.language === 'en'
+        ? `Bank statement imported!\nTransactions: ${data.transactions_count || 0}\nBank: ${data.bank_name || 'Unknown'}`
+        : `已匯入銀行月結單！\n交易筆數：${data.transactions_count || 0}\n銀行：${data.bank_name || '未知'}`);
     },
     onError: (err: any) => {
-      alert(`匯入失敗：${err?.message || err?.error || '未知錯誤'}`);
+      alert(i18n.language === 'en'
+        ? `Import failed: ${err?.message || err?.error || 'Unknown error'}`
+        : `匯入失敗：${err?.message || err?.error || '未知錯誤'}`);
     },
   });
 
@@ -513,7 +519,9 @@ export default function FileStorage() {
     } else if (action === 'delete') {
       deleteMut.mutate(f.id);
     } else if (action === 'import-statement') {
-      if (confirm(`確定要將「${f.filename}」匯入為銀行月結單嗎？系統會自動 OCR 辨識並解析交易紀錄。`)) {
+      if (confirm(i18n.language === 'en'
+        ? `Import "${f.filename}" as a bank statement? The system will auto-OCR and parse transactions.`
+        : `確定要將「${f.filename}」匯入為銀行月結單嗎？系統會自動 OCR 辨識並解析交易紀錄。`)) {
         importStmtMut.mutate(f.id);
       }
     }
@@ -799,10 +807,14 @@ export default function FileStorage() {
           <option value="">{t('fileStorage.allFolders')}</option>
           {folderList.map(f => <option key={f} value={f}>{f}</option>)}
         </select>
-        <span className="text-xs text-muted-foreground">{fileList.length} 個檔案</span>
+        <span className="text-xs text-muted-foreground">
+          {i18n.language === 'en'
+            ? `${fileList.length} file${fileList.length === 1 ? '' : 's'}`
+            : `${fileList.length} 個檔案`}
+        </span>
         <button onClick={() => autoMatchMut.mutate()} disabled={autoMatchMut.isPending}
           className="flex items-center gap-1 px-3 py-2 bg-primary text-primary-foreground rounded-md text-xs hover:opacity-90 disabled:opacity-40">
-          <Zap className="h-3 w-3" /> 配對發票
+          <Zap className="h-3 w-3" /> {i18n.language === 'en' ? 'Match Invoices' : '配對發票'}
         </button>
       </div>
 
@@ -810,15 +822,22 @@ export default function FileStorage() {
       {editingId ? (
         <div className="bg-card border rounded-xl p-6">
           <div className="space-y-3">
-            <input value={editName} onChange={e => setEditName(e.target.value)} className="px-3 py-2 border rounded-md text-sm w-full" placeholder="檔案名稱" />
+            <input value={editName} onChange={e => setEditName(e.target.value)} className="px-3 py-2 border rounded-md text-sm w-full"
+              placeholder={i18n.language === 'en' ? 'Filename' : '檔案名稱'} />
             <div className="flex gap-3">
-              <input value={editFolder} onChange={e => setEditFolder(e.target.value)} className="px-3 py-2 border rounded-md text-sm flex-1" placeholder="資料夾（可用 / 分隔層級）" />
-              <input value={editDesc} onChange={e => setEditDesc(e.target.value)} className="px-3 py-2 border rounded-md text-sm flex-1" placeholder="描述" />
+              <input value={editFolder} onChange={e => setEditFolder(e.target.value)} className="px-3 py-2 border rounded-md text-sm flex-1"
+                placeholder={i18n.language === 'en' ? 'Folder (use / for subfolders)' : '資料夾（可用 / 分隔層級）'} />
+              <input value={editDesc} onChange={e => setEditDesc(e.target.value)} className="px-3 py-2 border rounded-md text-sm flex-1"
+                placeholder={i18n.language === 'en' ? 'Description' : '描述'} />
             </div>
             <div className="flex gap-2 justify-end">
-              <button onClick={() => setEditingId(null)} className="px-3 py-1.5 border rounded-md text-sm">取消</button>
+              <button onClick={() => setEditingId(null)} className="px-3 py-1.5 border rounded-md text-sm">
+                {i18n.language === 'en' ? 'Cancel' : '取消'}
+              </button>
               <button onClick={() => updateMut.mutate({ id: editingId, body: { filename: editName, folder: editFolder, description: editDesc } })}
-                className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-sm">儲存</button>
+                className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-sm">
+                {i18n.language === 'en' ? 'Save' : '儲存'}
+              </button>
             </div>
           </div>
         </div>

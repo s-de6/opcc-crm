@@ -27,7 +27,7 @@ interface Transaction {
 }
 
 export default function BankStatements() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -90,7 +90,9 @@ export default function BankStatements() {
     mutationFn: () => api('/bank-statements/auto-match', { method: 'POST' }),
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['bank-statement', expandedId] });
-      alert(`配對完成：${data.matched?.length || 0} 筆建議，${data.unmatched_count || 0} 筆未配對`);
+      alert(i18n.language === 'en'
+        ? `Auto-match done: ${data.matched?.length || 0} suggested, ${data.unmatched_count || 0} unmatched`
+        : `配對完成：${data.matched?.length || 0} 筆建議，${data.unmatched_count || 0} 筆未配對`);
     },
   });
 
@@ -135,7 +137,9 @@ export default function BankStatements() {
     mutationFn: () => api(`/bank-statements/${expandedId}/auto-categorize`, { method: 'POST' }),
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['bank-statement', expandedId] });
-      alert(`已自動分類：${data.categorized} 筆，跳過 ${data.skipped} 筆（共 ${data.total} 筆）`);
+      alert(i18n.language === 'en'
+        ? `Auto-categorized: ${data.categorized} rows, skipped ${data.skipped} (total ${data.total})`
+        : `已自動分類：${data.categorized} 筆，跳過 ${data.skipped} 筆（共 ${data.total} 筆）`);
     },
   });
 
@@ -235,10 +239,13 @@ export default function BankStatements() {
                 {expandedId === s.id && (
                   <div className="border-x border-b rounded-b-md bg-muted/10 px-4 py-3">
                     {detailQuery.isLoading ? (
-                      <p className="text-sm text-muted-foreground py-4 text-center">Loading transactions...</p>
+                      <p className="text-sm text-muted-foreground py-4 text-center">
+                        {i18n.language === 'en' ? 'Loading transactions...' : '載入交易中...'}
+                      </p>
                     ) : transactions.length === 0 ? (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground py-4 justify-center">
-                        <FileText className="h-4 w-4" /> No transactions found
+                        <FileText className="h-4 w-4" />
+                        {i18n.language === 'en' ? 'No transactions found' : '沒有找到交易'}
                       </div>
                     ) : (
                       <div>
@@ -272,26 +279,30 @@ export default function BankStatements() {
                                         body: { csv: text },
                                       });
                                       queryClient.invalidateQueries({ queryKey: ['bank-statement', expandedId] });
-                                      alert('CSV 匯入完成');
+                                      alert(i18n.language === 'en' ? 'CSV import complete' : 'CSV 匯入完成');
                                     } catch (err: any) {
-                                      alert('匯入失敗：' + (err.message || 'unknown'));
+                                      alert((i18n.language === 'en' ? 'Import failed: ' : '匯入失敗：') + (err.message || 'unknown'));
                                     }
                                     e.target.value = '';
                                   }} />
                               </label>
                               <button onClick={() => { setEditMode(!editMode); setEdits({}); }}
                                 className={`px-2 py-1 text-xs rounded border ${editMode ? 'bg-primary text-primary-foreground border-primary' : 'hover:bg-muted'}`}>
-                                {editMode ? 'Done Editing' : '✏️ Edit'}
+                                {editMode
+                                  ? (i18n.language === 'en' ? 'Done Editing' : '完成編輯')
+                                  : (i18n.language === 'en' ? '✏️ Edit' : '✏️ 編輯')}
                               </button>
                               <button onClick={async () => {
                                 if (!detail?.id) return;
                                 try {
                                   const res = await api(`/bank-statements/${detail.id}/reconcile`, { method: 'POST' });
                                   setReconData(res);
-                                } catch (err: any) { alert('對賬失敗：' + (err.message || 'unknown')); }
+                                } catch (err: any) {
+                                  alert((i18n.language === 'en' ? 'Reconcile failed: ' : '對賬失敗：') + (err.message || 'unknown'));
+                                }
                               }}
                                 className="px-2 py-1 text-xs rounded border hover:bg-green-100">
-                                🔍 對賬 Reconcile
+                                {i18n.language === 'en' ? '🔍 Reconcile' : '🔍 對賬 Reconcile'}
                               </button>
                             </div>
                           </div>
@@ -400,7 +411,9 @@ export default function BankStatements() {
                                         }}
                                         onClick={e => e.stopPropagation()}
                                       >
-                                        <option value="" className="text-muted-foreground">-- 選科目 --</option>
+                                        <option value="" className="text-muted-foreground">
+                          {i18n.language === 'en' ? '-- Select account --' : '-- 選科目 --'}
+                        </option>
                                         {accounts.map((a: any) => (
                                           <option key={a.account_code} value={a.account_code}>
                                             {a.account_code} {a.account_name}
@@ -589,30 +602,34 @@ Return ONLY a JSON object with corrected fields. If nothing needs fixing, return
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setReconData(null)}>
           <div className="bg-card border rounded-xl p-6 w-full max-w-lg mx-4 space-y-4" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-lg">銀行對賬 Bank Reconciliation</h3>
+              <h3 className="font-bold text-lg">{i18n.language === 'en' ? 'Bank Reconciliation' : '銀行對賬 Bank Reconciliation'}</h3>
               <span className={`text-sm font-bold px-3 py-1 rounded ${Math.abs(reconData.difference || 0) < 0.01 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                {Math.abs(reconData.difference || 0) < 0.01 ? '✓ 相符' : '⚠ 不符'}
+                {Math.abs(reconData.difference || 0) < 0.01
+                  ? (i18n.language === 'en' ? '✓ Balanced' : '✓ 相符')
+                  : (i18n.language === 'en' ? '⚠ Difference' : '⚠ 不符')}
               </span>
             </div>
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div className="bg-muted/50 rounded-lg p-3">
-                <span className="text-muted-foreground text-xs">月結單餘額</span>
+                <span className="text-muted-foreground text-xs">{i18n.language === 'en' ? 'Statement Balance' : '月結單餘額'}</span>
                 <p className="font-bold text-lg">HKD {reconData.statement_balance?.toLocaleString()}</p>
               </div>
               <div className="bg-muted/50 rounded-lg p-3">
-                <span className="text-muted-foreground text-xs">總賬餘額</span>
+                <span className="text-muted-foreground text-xs">{i18n.language === 'en' ? 'GL Balance' : '總賬餘額'}</span>
                 <p className="font-bold text-lg">HKD {reconData.gl_balance?.toLocaleString()}</p>
               </div>
             </div>
             <div className="text-sm flex justify-between border-t pt-3">
-              <span>差異 Difference</span>
+              <span>{i18n.language === 'en' ? 'Difference' : '差異 Difference'}</span>
               <span className={`font-bold ${Math.abs(reconData.difference || 0) < 0.01 ? 'text-green-600' : 'text-red-600'}`}>
                 HKD {reconData.difference?.toLocaleString()}
               </span>
             </div>
             {(reconData.outstanding_transactions || []).length > 0 && (
               <div>
-                <span className="text-sm font-medium">未達交易 Outstanding ({reconData.outstanding_transactions.length})</span>
+                <span className="text-sm font-medium">
+                  {i18n.language === 'en' ? `Outstanding (${reconData.outstanding_transactions.length})` : `未達交易 Outstanding (${reconData.outstanding_transactions.length})`}
+                </span>
                 <div className="max-h-48 overflow-y-auto mt-2 border rounded-lg divide-y">
                   {(reconData.outstanding_transactions || []).map((t: any) => (
                     <div key={t.id} className="flex items-center justify-between px-3 py-2 text-xs hover:bg-muted/30">
@@ -627,7 +644,9 @@ Return ONLY a JSON object with corrected fields. If nothing needs fixing, return
               </div>
             )}
             <div className="flex gap-3 justify-end">
-              <button onClick={() => setReconData(null)} className="px-4 py-2 border rounded-md text-sm">關閉</button>
+              <button onClick={() => setReconData(null)} className="px-4 py-2 border rounded-md text-sm">
+                {i18n.language === 'en' ? 'Close' : '關閉'}
+              </button>
             </div>
           </div>
         </div>
@@ -651,6 +670,7 @@ function AccountModal({ tx, allTx, accounts, onClose, onApply }: {
   onClose: () => void;
   onApply: (code: string, applySimilar: boolean, similarIds?: Set<string>) => void;
 }) {
+  const { i18n } = useTranslation();
   const [search, setSearch] = useState('');
   const [selectedCode, setSelectedCode] = useState(tx.account_code || '');
   const [selectedSimilar, setSelectedSimilar] = useState<Set<string>>(new Set());
@@ -672,7 +692,7 @@ function AccountModal({ tx, allTx, accounts, onClose, onApply }: {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
       <div className="bg-card border rounded-xl p-4 w-[80vw] mx-4 space-y-3 max-h-[70vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between">
-          <h3 className="font-bold text-lg flex items-center gap-2"><Tag className="h-5 w-5" /> 選擇會計科目</h3>
+          <h3 className="font-bold text-lg flex items-center gap-2"><Tag className="h-5 w-5" /> {i18n.language === 'en' ? 'Select Account Code' : '選擇會計科目'}</h3>
           <button onClick={onClose} className="p-1 hover:bg-muted rounded"><X className="h-5 w-5" /></button>
         </div>
 
@@ -696,7 +716,7 @@ function AccountModal({ tx, allTx, accounts, onClose, onApply }: {
         <div className="relative">
           <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="輸入科目編號或名稱搜尋..."
+            placeholder={i18n.language === 'en' ? 'Search by code or name...' : '輸入科目編號或名稱搜尋...'}
             className="w-full pl-9 pr-3 py-2 border rounded-md text-sm bg-background" autoFocus />
         </div>
 
@@ -714,7 +734,7 @@ function AccountModal({ tx, allTx, accounts, onClose, onApply }: {
             </button>
           ))}
           {filtered.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">無匹配科目</p>
+            <p className="text-sm text-muted-foreground text-center py-4">{i18n.language === 'en' ? 'No matching accounts' : '無匹配科目'}</p>
           )}
         </div>
 
@@ -722,7 +742,7 @@ function AccountModal({ tx, allTx, accounts, onClose, onApply }: {
         {similar.length > 0 && (
           <div className="border rounded-lg">
             <div className="px-3 py-2 bg-muted/30 border-b text-sm font-medium flex items-center gap-2">
-              <span>相似交易 ({similar.length})</span>
+              <span>{i18n.language === 'en' ? `Similar transactions (${similar.length})` : `相似交易 (${similar.length})`}</span>
               <span className="text-xs text-muted-foreground">
                 {(() => {
                   const cats = new Map<string, number>();
@@ -741,7 +761,9 @@ function AccountModal({ tx, allTx, accounts, onClose, onApply }: {
                 else setSelectedSimilar(new Set(similar.map((t: Transaction) => t.id)));
               }}
                 className="text-xs text-primary hover:underline">
-                {selectedSimilar.size === similar.length ? '取消全選' : '全選'}
+                {selectedSimilar.size === similar.length
+                  ? (i18n.language === 'en' ? 'Deselect All' : '取消全選')
+                  : (i18n.language === 'en' ? 'Select All' : '全選')}
               </button>
             </div>
             <div className="max-h-36 overflow-y-auto">
@@ -785,7 +807,9 @@ function AccountModal({ tx, allTx, accounts, onClose, onApply }: {
         }}
           disabled={!selectedCode}
           className="w-full py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-30">
-          {selectedSimilar.size > 0 ? `套用科目（含 ${selectedSimilar.size} 筆相似交易）` : '套用科目'}
+          {selectedSimilar.size > 0
+            ? (i18n.language === 'en' ? `Apply to ${selectedSimilar.size + 1} transactions` : `套用科目（含 ${selectedSimilar.size} 筆相似交易）`)
+            : (i18n.language === 'en' ? 'Apply Account Code' : '套用科目')}
         </button>
       </div>
     </div>
@@ -830,6 +854,7 @@ function ManualMatchModal({ txId, onClose, onMatch }: { txId: string; onClose: (
 
 // ── Pending Review Banner: shows draft statements awaiting confirmation ──
 function PendingReviewBanner() {
+  const { i18n } = useTranslation();
   const queryClient = useQueryClient();
   const { data } = useQuery({
     queryKey: ['bank-statements-drafts'],
@@ -892,7 +917,9 @@ function PendingReviewBanner() {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  if (confirm('Discard this draft? It will be moved to the Recycle Bin (30-day restore) and the PDF will also be removed from File Storage.')) {
+                  if (confirm(i18n.language === 'en'
+                    ? 'Discard this draft? It will be moved to the Recycle Bin (30-day restore) and the PDF will also be removed from File Storage.'
+                    : '放棄此草稿？將移至回收站（可在30天內還原），PDF 也將從文件存儲中刪除。')) {
                     dismissMut.mutate(d.id);
                   }
                 }}

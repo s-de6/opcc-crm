@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../contexts/AuthContext';
@@ -6,6 +7,7 @@ import { Settings as SettingsIcon, Building2, Upload, Save } from 'lucide-react'
 // Website → /website-generator | Modules → /modules | API/WB → /integrations
 
 export default function Settings() {
+  const { i18n } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
@@ -13,30 +15,6 @@ export default function Settings() {
   const { data: company } = useQuery({ queryKey: ['company'], queryFn: () => api('/company') });
   const [coForm, setCoForm] = useState({ name: '', address: '', address2: '', phone: '', email: '', website: '', bank_name: '', bank_account: '', bank_swift: '', bank_address: '', signatory_name: '', tax_id: '', invoice_number_pattern: 'INV{YY}{MM}-{NNN}' });
   const [logoFile, setLogoFile] = useState<string>('');
-
-  // ── Change Password ──
-  const [pwForm, setPwForm] = useState({ current: '', newPw: '', confirm: '' });
-  const [pwMsg, setPwMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const changePwMut = useMutation({
-    mutationFn: (body: any) => api('/auth/change-password', { method: 'POST', body }),
-    onSuccess: () => {
-      setPwMsg({ type: 'success', text: 'Password changed successfully!' });
-      setPwForm({ current: '', newPw: '', confirm: '' });
-      setTimeout(() => setPwMsg(null), 3000);
-    },
-    onError: (err: any) => {
-      setPwMsg({ type: 'error', text: err?.error || err?.message || 'Failed to change password.' });
-    },
-  });
-
-  const handleChangePw = () => {
-    setPwMsg(null);
-    if (!pwForm.current) return setPwMsg({ type: 'error', text: 'Please enter your current password.' });
-    if (pwForm.newPw.length < 8) return setPwMsg({ type: 'error', text: 'New password must be at least 8 characters.' });
-    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(pwForm.newPw)) return setPwMsg({ type: 'error', text: 'Password must contain uppercase, lowercase, and a number.' });
-    if (pwForm.newPw !== pwForm.confirm) return setPwMsg({ type: 'error', text: 'Passwords do not match.' });
-    changePwMut.mutate({ current_password: pwForm.current, new_password: pwForm.newPw });
-  };
   const [coSaved, setCoSaved] = useState(false);
 
   React.useEffect(() => {
@@ -91,33 +69,33 @@ export default function Settings() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">設定 Settings</h2>
-        <p className="text-muted-foreground mt-1">帳戶與 API 設定</p>
+        <h2 className="text-2xl font-bold">{i18n.language === 'en' ? 'Settings' : '設定 Settings'}</h2>
+        <p className="text-muted-foreground mt-1">{i18n.language === 'en' ? 'Account & Settings' : '帳戶與 API 設定'}</p>
       </div>
 
       {/* Account Info */}
       <div className="bg-card border rounded-xl p-6 space-y-3">
         <h3 className="font-semibold flex items-center gap-2">
-          <SettingsIcon className="h-4 w-4" /> 帳戶資訊
+          <SettingsIcon className="h-4 w-4" /> {i18n.language === 'en' ? 'Account Info' : '帳戶資訊'}
         </h3>
         <div className="grid grid-cols-2 gap-3 text-sm">
-          <div><span className="text-muted-foreground">姓名:</span> {user?.name}</div>
-          <div><span className="text-muted-foreground">角色:</span> {user?.role}</div>
-          <div><span className="text-muted-foreground">電郵:</span> {user?.email}</div>
-          <div><span className="text-muted-foreground">公司:</span> {user?.company_name || '-'}</div>
+          <div><span className="text-muted-foreground">{i18n.language === 'en' ? 'Name:' : '姓名:'}</span> {user?.name}</div>
+          <div><span className="text-muted-foreground">{i18n.language === 'en' ? 'Role:' : '角色:'}</span> {user?.role}</div>
+          <div><span className="text-muted-foreground">{i18n.language === 'en' ? 'Email:' : '電郵:'}</span> {user?.email}</div>
+          <div><span className="text-muted-foreground">{i18n.language === 'en' ? 'Company:' : '公司:'}</span> {user?.company_name || '-'}</div>
         </div>
       </div>
 
       {/* Company Profile */}
       <div className="bg-card border rounded-xl p-6 space-y-4">
-        <h3 className="font-semibold flex items-center gap-2"><Building2 className="h-4 w-4" /> 公司資料</h3>
-        <h4 className="text-sm font-medium mt-2">PDF 文件圖案</h4>
+        <h3 className="font-semibold flex items-center gap-2"><Building2 className="h-4 w-4" /> {i18n.language === 'en' ? 'Company Profile' : '公司資料'}</h3>
+        <h4 className="text-sm font-medium mt-2">{i18n.language === 'en' ? 'PDF Document Images' : 'PDF 文件圖案'}</h4>
         <div className="grid grid-cols-3 gap-4">
           <div className="space-y-2 text-center">
             <label className="text-xs text-muted-foreground">Header Logo</label>
             <label className="flex flex-col items-center gap-1 cursor-pointer border rounded-lg p-3 hover:bg-muted/30">
               <Upload className="h-5 w-5 text-muted-foreground" />
-              <span className="text-xs text-primary">上傳 PDF Logo</span>
+              <span className="text-xs text-primary">{i18n.language === 'en' ? 'Upload PDF Logo' : '上傳 PDF Logo'}</span>
               <input type="file" accept="image/png" onChange={handlePdfImageUpload('pdf-logo')} className="hidden" />
             </label>
           </div>
@@ -125,7 +103,7 @@ export default function Settings() {
             <label className="text-xs text-muted-foreground">公司印章 Chop</label>
             <label className="flex flex-col items-center gap-1 cursor-pointer border rounded-lg p-3 hover:bg-muted/30">
               <Upload className="h-5 w-5 text-muted-foreground" />
-              <span className="text-xs text-primary">上傳 Chop</span>
+              <span className="text-xs text-primary">{i18n.language === 'en' ? 'Upload Chop' : '上傳 Chop'}</span>
               <input type="file" accept="image/png" onChange={handlePdfImageUpload('pdf-chop')} className="hidden" />
             </label>
           </div>
@@ -133,7 +111,7 @@ export default function Settings() {
             <label className="text-xs text-muted-foreground">簽名章 Stamp</label>
             <label className="flex flex-col items-center gap-1 cursor-pointer border rounded-lg p-3 hover:bg-muted/30">
               <Upload className="h-5 w-5 text-muted-foreground" />
-              <span className="text-xs text-primary">上傳簽名章</span>
+              <span className="text-xs text-primary">{i18n.language === 'en' ? 'Upload Stamp' : '上傳簽名章'}</span>
               <input type="file" accept="image/png" onChange={handlePdfImageUpload('pdf-stamp')} className="hidden" />
             </label>
           </div>
@@ -147,15 +125,15 @@ export default function Settings() {
           <div><label className="text-xs text-muted-foreground">簽署人</label><input value={coForm.signatory_name} onChange={e => setCoForm({...coForm, signatory_name: e.target.value})} className="w-full px-3 py-2 border rounded-md bg-background text-sm mt-0.5" /></div>
           <div><label className="text-xs text-muted-foreground">稅號</label><input value={coForm.tax_id} onChange={e => setCoForm({...coForm, tax_id: e.target.value})} className="w-full px-3 py-2 border rounded-md bg-background text-sm mt-0.5" /></div>
         </div>
-        <h4 className="text-sm font-medium mt-2">銀行資料</h4>
+        <h4 className="text-sm font-medium mt-2">{i18n.language === 'en' ? 'Bank Details' : '銀行資料'}</h4>
         <div className="grid grid-cols-2 gap-3">
           <div><label className="text-xs text-muted-foreground">銀行名稱</label><input value={coForm.bank_name} onChange={e => setCoForm({...coForm, bank_name: e.target.value})} className="w-full px-3 py-2 border rounded-md bg-background text-sm mt-0.5" /></div>
           <div><label className="text-xs text-muted-foreground">帳戶號碼</label><input value={coForm.bank_account} onChange={e => setCoForm({...coForm, bank_account: e.target.value})} className="w-full px-3 py-2 border rounded-md bg-background text-sm mt-0.5" /></div>
           <div><label className="text-xs text-muted-foreground">Swift/BIC</label><input value={coForm.bank_swift} onChange={e => setCoForm({...coForm, bank_swift: e.target.value})} className="w-full px-3 py-2 border rounded-md bg-background text-sm mt-0.5" /></div>
           <div><label className="text-xs text-muted-foreground">銀行地址</label><input value={coForm.bank_address} onChange={e => setCoForm({...coForm, bank_address: e.target.value})} className="w-full px-3 py-2 border rounded-md bg-background text-sm mt-0.5" /></div>
         </div>
-        <h4 className="text-sm font-medium mt-2">發票號碼格式</h4>
-        <p className="text-xs text-muted-foreground">建立發票時自動產生號碼，留空或刪除則手動輸入</p>
+        <h4 className="text-sm font-medium mt-2">{i18n.language === 'en' ? 'Invoice Number Format' : '發票號碼格式'}</h4>
+        <p className="text-xs text-muted-foreground">{i18n.language === 'en' ? 'Auto-generates invoice numbers. Leave blank for manual entry.' : '建立發票時自動產生號碼，留空或刪除則手動輸入'}</p>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <select value={coForm.invoice_number_pattern} onChange={e => setCoForm({...coForm, invoice_number_pattern: e.target.value})}
@@ -166,13 +144,13 @@ export default function Settings() {
                 { v: 'INV{YY}{MM}-{NNNN}', label: 'INV2605-0001' },
                 { v: '#{YYYY}{MM}{NNN}', label: '#202605001' },
                 { v: '#{YY}{MM}{DD}-{NN}', label: '#260511-01' },
-                { v: 'INV-{NNNNN}', label: 'INV-00001 (流水號)' },
+                { v: 'INV-{NNNNN}', label: i18n.language === 'en' ? 'INV-00001 (Sequential)' : 'INV-00001 (流水號)' },
               ].map(p => <option key={p.v} value={p.v}>{p.v} → {p.label}</option>)}
             </select>
           </div>
           <div className="flex items-end pb-2">
             <span className="text-xs text-muted-foreground">
-              預覽: {(() => {
+              {i18n.language === 'en' ? 'Preview: ' : '預覽: '}{(() => {
                 const now = new Date();
                 const p = coForm.invoice_number_pattern || 'INV{YY}{MM}-{NNN}';
                 return p
@@ -187,60 +165,8 @@ export default function Settings() {
         </div>
         <button onClick={() => saveCompany.mutate(coForm)} disabled={saveCompany.isPending}
           className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm hover:opacity-90 disabled:opacity-50">
-          <Save className="h-4 w-4" /> {coSaved ? '已儲存！' : '儲存公司資料'}
+          <Save className="h-4 w-4" /> {coSaved ? (i18n.language === 'en' ? 'Saved!' : '已儲存！') : (i18n.language === 'en' ? 'Save Company Profile' : '儲存公司資料')}
         </button>
-      </div>
-
-      {/* ── Change Password ── */}
-      <div className="bg-card border rounded-xl p-6 space-y-4 mt-6">
-        <h3 className="font-semibold text-base flex items-center gap-2">
-          🔒 Change Password 更改密碼
-        </h3>
-        {pwMsg && (
-          <div className={`text-sm px-3 py-2 rounded-md ${pwMsg.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
-            {pwMsg.text}
-          </div>
-        )}
-        <div className="grid grid-cols-1 gap-3 max-w-md">
-          <div>
-            <label className="text-xs text-muted-foreground block mb-1">Current Password 現有密碼</label>
-            <input
-              type="password"
-              value={pwForm.current}
-              onChange={(e) => setPwForm({ ...pwForm, current: e.target.value })}
-              className="w-full px-3 py-2 border rounded-md text-sm bg-background"
-              placeholder="Enter current password"
-            />
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground block mb-1">New Password 新密碼</label>
-            <input
-              type="password"
-              value={pwForm.newPw}
-              onChange={(e) => setPwForm({ ...pwForm, newPw: e.target.value })}
-              className="w-full px-3 py-2 border rounded-md text-sm bg-background"
-              placeholder="Min 8 chars, uppercase, lowercase, number"
-            />
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground block mb-1">Confirm New Password 確認新密碼</label>
-            <input
-              type="password"
-              value={pwForm.confirm}
-              onChange={(e) => setPwForm({ ...pwForm, confirm: e.target.value })}
-              className="w-full px-3 py-2 border rounded-md text-sm bg-background"
-              placeholder="Repeat new password"
-            />
-          </div>
-          <button
-            onClick={handleChangePw}
-            disabled={changePwMut.isPending}
-            className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm hover:opacity-90 disabled:opacity-50 w-fit"
-          >
-            <Save className="h-4 w-4" />
-            {changePwMut.isPending ? 'Changing…' : 'Change Password 更改密碼'}
-          </button>
-        </div>
       </div>
 
     </div>

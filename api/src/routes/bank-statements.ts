@@ -404,6 +404,12 @@ bank.get('/transactions', async (c) => {
     `SELECT id, bank_statement_id, transaction_date, description, deposit_amount, withdrawal_amount,
             balance, account_type, account_code, reference, invoice_id, match_status, match_confidence
      FROM bank_transactions WHERE user_id = ? AND deleted_at IS NULL
+     AND UPPER(description) NOT LIKE '%B/F BALANCE%'
+     AND UPPER(description) NOT LIKE '%C/F BALANCE%'
+     AND UPPER(description) NOT LIKE '%OPENING BALANCE%'
+     AND UPPER(description) NOT LIKE '%CLOSING BALANCE%'
+     AND UPPER(description) NOT LIKE 'B/F%'
+     AND UPPER(description) NOT LIKE 'C/F%'
      ORDER BY transaction_date DESC, sort_order DESC`
   ).bind(tenantId).all();
   return c.json({ data: rows.results });

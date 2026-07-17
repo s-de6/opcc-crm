@@ -19,9 +19,6 @@
     "userManagement": "User Management",
     "applications": "Applications",
     "auditLog": "Audit Log",
-    "userManagement": "User Management",
-    "applications": "Applications",
-    "auditLog": "Audit Log",
     "logout": "Logout",
     "documents": "Company Docs",
     "integrations": "Integrations",
@@ -44,7 +41,9 @@
     "compliance": "Compliance",
     "pricing": "Pricing",
     "subscription": "Subscription",
-    "recycleBin": "Recycle Bin"
+    "recycleBin": "Recycle Bin",
+    "telegramBills": "Telegram Bills",
+    "aiMemory": "AI Memory"
   },
   "auth": {
     "login": "Login",

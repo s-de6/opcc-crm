@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { api, WORKER_API_BASE } from '../lib/api';
 import { Trash2, RotateCcw, AlertTriangle, FileText, Landmark } from 'lucide-react';
 
@@ -18,6 +19,7 @@ function daysUntilPurge(deletedAt: string, retentionDays: number): number {
 }
 
 export default function RecycleBin() {
+  const { i18n } = useTranslation();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [showConfirmPurge, setShowConfirmPurge] = useState<{ type: string; id: string; name: string } | null>(null);
@@ -112,7 +114,7 @@ export default function RecycleBin() {
     onError: (e: any) => alert(`Purge failed: ${e?.error || e?.message || 'unknown'}`),
   });
 
-  if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading recycle bin…</div>;
+  if (isLoading) return <div className="p-8 text-center text-muted-foreground">{i18n.language === 'en' ? 'Loading recycle bin…' : '載入回收站中…'}</div>;
 
   if (error) {
     const msg = (error as any)?.error || (error as any)?.message || '';
@@ -121,10 +123,11 @@ export default function RecycleBin() {
         <div className="p-8 max-w-2xl">
           <div className="rounded-lg border border-amber-300 bg-amber-50 p-6">
             <AlertTriangle className="h-8 w-8 text-amber-600 mb-2" />
-            <h2 className="text-lg font-bold">Restricted</h2>
+            <h2 className="text-lg font-bold">{i18n.language === 'en' ? 'Restricted' : '存取受限'}</h2>
             <p className="text-sm text-muted-foreground mt-1">
-              The recycle bin is only accessible to users with the <b>higher</b> permission tier
-              (account owner or boss). Ask your admin to grant you access or perform the restore.
+              {i18n.language === 'en'
+                ? <>The recycle bin is only accessible to users with the <b>higher</b> permission tier (account owner or boss). Ask your admin to grant you access or perform the restore.</>
+                : <>回收站僅對具有<b>較高</b>權限的用戶開放（帳戶擁有者或管理員）。請聯繫管理員授權或進行還原操作。</>}
             </p>
           </div>
         </div>
@@ -154,53 +157,62 @@ export default function RecycleBin() {
 
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Trash2 className="h-6 w-6 text-muted-foreground" /> Recycle Bin 回收站
+          <Trash2 className="h-6 w-6 text-muted-foreground" />
+          {i18n.language === 'en' ? 'Recycle Bin' : '回收站 Recycle Bin'}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Deleted items are kept here for <b>{retentionDays} days</b>, then permanently removed.
-          Only higher-tier users can restore or permanently delete.
-          <b className="text-foreground"> Restoring an invoice or receipt takes you back to the review page.</b>
+          {i18n.language === 'en' ? (
+            <>Deleted items are kept here for <b>{retentionDays} days</b>, then permanently removed.
+            Only higher-tier users can restore or permanently delete.
+            <b className="text-foreground"> Restoring an invoice or receipt takes you back to the review page.</b></>
+          ) : (
+            <>已刪除的項目將保留 <b>{retentionDays} 天</b>，之後永久刪除。
+            僅高級權限用戶可還原或永久刪除。
+            <b className="text-foreground">還原發票或收據後將跳轉至審核頁面。</b></>
+          )}
         </p>
       </div>
 
       <div className="bg-card border rounded-lg p-4 flex items-center gap-4">
         <div className="text-sm">
-          <b>{total}</b> item(s) in recycle bin
-          {stmts.length > 0 && <span className="text-muted-foreground"> · {stmts.length} statement(s)</span>}
-          {files.length > 0 && <span className="text-muted-foreground"> · {files.length} file(s)</span>}
+          <b>{total}</b> {i18n.language === 'en' ? 'item(s) in recycle bin' : '個項目在回收站'}
+          {stmts.length > 0 && <span className="text-muted-foreground"> · {stmts.length} {i18n.language === 'en' ? 'statement(s)' : '份月結單'}</span>}
+          {files.length > 0 && <span className="text-muted-foreground"> · {files.length} {i18n.language === 'en' ? 'file(s)' : '個文件'}</span>}
         </div>
         <div className="flex-1" />
         <button
-          onClick={() => { if (confirm(`Permanently purge everything older than ${retentionDays} days?`)) purgeOldMut.mutate(); }}
+          onClick={() => { if (confirm(i18n.language === 'en' ? `Permanently purge everything older than ${retentionDays} days?` : `永久清除所有超過 ${retentionDays} 天的項目？`)) purgeOldMut.mutate(); }}
           className="text-xs px-3 py-1.5 border border-red-300 text-red-600 rounded hover:bg-red-50"
           disabled={purgeOldMut.isPending}
         >
-          {purgeOldMut.isPending ? 'Purging…' : `Purge items > ${retentionDays} days`}
+          {purgeOldMut.isPending
+            ? (i18n.language === 'en' ? 'Purging…' : '清除中…')
+            : (i18n.language === 'en' ? `Purge items > ${retentionDays} days` : `清除超過 ${retentionDays} 天的項目`)}
         </button>
       </div>
 
       {total === 0 && (
         <div className="bg-card border rounded-lg p-12 text-center text-muted-foreground">
           <Trash2 className="h-12 w-12 mx-auto mb-3 opacity-30" />
-          <p>Recycle bin is empty.</p>
+          <p>{i18n.language === 'en' ? 'Recycle bin is empty.' : '回收站是空的。'}</p>
         </div>
       )}
 
       {stmts.length > 0 && (
         <div>
           <h2 className="text-sm font-bold mb-2 flex items-center gap-2">
-            <Landmark className="h-4 w-4" /> Bank Statements ({stmts.length})
+            <Landmark className="h-4 w-4" /> {i18n.language === 'en' ? `Bank Statements (${stmts.length})` : `銀行月結單 (${stmts.length})`}
           </h2>
           <div className="bg-card border rounded-lg overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-xs uppercase">
                 <tr>
-                  <th className="px-3 py-2 text-left">Bank</th>
-                  <th className="px-3 py-2 text-left">Account</th>
-                  <th className="px-3 py-2 text-left">Period</th>
-                  <th className="px-3 py-2 text-left">Deleted</th>
-                  <th className="px-3 py-2 text-left">Days until purge</th>
-                  <th className="px-3 py-2 text-left">Actions</th>
+                  <th className="px-3 py-2 text-left">{i18n.language === 'en' ? 'Bank' : '銀行'}</th>
+                  <th className="px-3 py-2 text-left">{i18n.language === 'en' ? 'Account' : '帳號'}</th>
+                  <th className="px-3 py-2 text-left">{i18n.language === 'en' ? 'Period' : '期間'}</th>
+                  <th className="px-3 py-2 text-left">{i18n.language === 'en' ? 'Deleted' : '刪除日期'}</th>
+                  <th className="px-3 py-2 text-left">{i18n.language === 'en' ? 'Days until purge' : '距清除天數'}</th>
+                  <th className="px-3 py-2 text-left">{i18n.language === 'en' ? 'Actions' : '操作'}</th>
                 </tr>
               </thead>
               <tbody>
@@ -224,13 +236,13 @@ export default function RecycleBin() {
                             className="text-xs px-2 py-1 border border-green-300 text-green-700 rounded hover:bg-green-50 inline-flex items-center gap-1"
                             disabled={isWorking}
                           >
-                            <RotateCcw className="h-3 w-3" /> Restore + Review
+                            <RotateCcw className="h-3 w-3" /> {i18n.language === 'en' ? 'Restore + Review' : '還原並審核'}
                           </button>
                           <button
                             onClick={() => setShowConfirmPurge({ type: 'bank_statement', id: s.id, name: `${s.bank_name} ${s.statement_year}-${s.statement_month}` })}
                             className="text-xs px-2 py-1 border border-red-300 text-red-600 rounded hover:bg-red-50"
                           >
-                            Delete forever
+                            {i18n.language === 'en' ? 'Delete forever' : '永久刪除'}
                           </button>
                         </div>
                       </td>
@@ -246,18 +258,18 @@ export default function RecycleBin() {
       {files.length > 0 && (
         <div>
           <h2 className="text-sm font-bold mb-2 flex items-center gap-2">
-            <FileText className="h-4 w-4" /> Files ({files.length})
+            <FileText className="h-4 w-4" /> {i18n.language === 'en' ? `Files (${files.length})` : `文件 (${files.length})`}
           </h2>
           <div className="bg-card border rounded-lg overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-xs uppercase">
                 <tr>
-                  <th className="px-3 py-2 text-left">Filename</th>
-                  <th className="px-3 py-2 text-left">Folder</th>
-                  <th className="px-3 py-2 text-left">Type</th>
-                  <th className="px-3 py-2 text-left">Deleted</th>
-                  <th className="px-3 py-2 text-left">Days until purge</th>
-                  <th className="px-3 py-2 text-left">Actions</th>
+                  <th className="px-3 py-2 text-left">{i18n.language === 'en' ? 'Filename' : '文件名'}</th>
+                  <th className="px-3 py-2 text-left">{i18n.language === 'en' ? 'Folder' : '資料夾'}</th>
+                  <th className="px-3 py-2 text-left">{i18n.language === 'en' ? 'Type' : '類型'}</th>
+                  <th className="px-3 py-2 text-left">{i18n.language === 'en' ? 'Deleted' : '刪除日期'}</th>
+                  <th className="px-3 py-2 text-left">{i18n.language === 'en' ? 'Days until purge' : '距清除天數'}</th>
+                  <th className="px-3 py-2 text-left">{i18n.language === 'en' ? 'Actions' : '操作'}</th>
                 </tr>
               </thead>
               <tbody>
@@ -283,13 +295,15 @@ export default function RecycleBin() {
                             disabled={isWorking}
                           >
                             <RotateCcw className="h-3 w-3" />
-                            {isInvoiceFile ? 'Restore + Review' : 'Restore'}
+                            {isInvoiceFile
+                              ? (i18n.language === 'en' ? 'Restore + Review' : '還原並審核')
+                              : (i18n.language === 'en' ? 'Restore' : '還原')}
                           </button>
                           <button
                             onClick={() => setShowConfirmPurge({ type: 'file', id: f.id, name: f.original_name || f.filename })}
                             className="text-xs px-2 py-1 border border-red-300 text-red-600 rounded hover:bg-red-50"
                           >
-                            Delete forever
+                            {i18n.language === 'en' ? 'Delete forever' : '永久刪除'}
                           </button>
                         </div>
                       </td>
@@ -307,19 +321,28 @@ export default function RecycleBin() {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-card border rounded-lg max-w-md p-6 shadow-2xl">
             <AlertTriangle className="h-8 w-8 text-red-600 mb-3" />
-            <h3 className="text-lg font-bold mb-2">Permanent deletion</h3>
+            <h3 className="text-lg font-bold mb-2">{i18n.language === 'en' ? 'Permanent deletion' : '永久刪除'}</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              You are about to <b>permanently delete</b> <span className="font-mono">{showConfirmPurge.name}</span>.
-              This cannot be undone — no restore is possible after this.
+              {i18n.language === 'en' ? (
+                <>You are about to <b>permanently delete</b> <span className="font-mono">{showConfirmPurge.name}</span>.
+                This cannot be undone — no restore is possible after this.</>
+              ) : (
+                <>您即將<b>永久刪除</b> <span className="font-mono">{showConfirmPurge.name}</span>。
+                此操作無法撤銷，刪除後無法還原。</>
+              )}
             </p>
             <div className="flex gap-2 justify-end">
-              <button onClick={() => setShowConfirmPurge(null)} className="px-3 py-1.5 border rounded text-sm">Cancel</button>
+              <button onClick={() => setShowConfirmPurge(null)} className="px-3 py-1.5 border rounded text-sm">
+                {i18n.language === 'en' ? 'Cancel' : '取消'}
+              </button>
               <button
                 onClick={() => purgeMut.mutate({ type: showConfirmPurge.type, id: showConfirmPurge.id })}
                 className="px-3 py-1.5 bg-red-600 text-white rounded text-sm hover:bg-red-700"
                 disabled={purgeMut.isPending}
               >
-                {purgeMut.isPending ? 'Deleting…' : 'Yes, delete forever'}
+                {purgeMut.isPending
+                  ? (i18n.language === 'en' ? 'Deleting…' : '刪除中…')
+                  : (i18n.language === 'en' ? 'Yes, delete forever' : '是，永久刪除')}
               </button>
             </div>
           </div>
